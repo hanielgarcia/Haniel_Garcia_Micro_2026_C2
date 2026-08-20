@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Reaction Timer - Panel Móvil</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e1e2e 0%, #2d2d44 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: #fff;
+            margin-bottom: 10px;
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 30px;
+            font-size: 0.9rem;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .metric:last-child {
+            border-bottom: none;
+        }
+        .metric-label {
+            font-size: 0.95rem;
+            color: #aaa;
+        }
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+        .metric-value.reaction { color: #00d4aa; }
+        .metric-value.hold { color: #ffd93d; }
+        .metric-value.delay { color: #6c8eff; }
+        .status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        .status.waiting {
+            background: rgba(255, 217, 61, 0.2);
+            color: #ffd93d;
+        }
+        .status.active {
+            background: rgba(0, 212, 170, 0.2);
+            color: #00d4aa;
+        }
+        .status.disconnected {
+            background: rgba(255, 71, 87, 0.2);
+            color: #ff4757;
+        }
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        .status.waiting .status-dot { background: #ffd93d; }
+        .status.active .status-dot { background: #00d4aa; }
+        .status.disconnected .status-dot { background: #ff4757; }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .history-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #fff;
+        }
+        .history-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+            transition: background 0.2s;
+        }
+        .history-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .history-time {
+            color: #888;
+            font-size: 0.75rem;
+        }
+        .history-reaction {
+            color: #00d4aa;
+            font-weight: 600;
+        }
+        .empty-state {
+            text-align: center;
+            color: #666;
+            padding: 40px 20px;
+            font-size: 0.9rem;
+        }
+        .stats-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        .stat-box {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 14px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+        .stat-label {
+            font-size: 0.7rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 4px;
+        }
+        @media (max-width: 400px) {
+            .stats-row {
+                grid-template-columns: 1fr 1fr;
+            }
+            .stat-box:last-child {
+                grid-column: span 2;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>��� Reaction Timer</h1>
+        <p class="subtitle">Medición de tiempo de reacción - ESP32-S3</p>
+
+        <div id="status" class="status waiting">
+            <span class="status-dot"></span>
+            <span id="status-text">Conectando...</span>
+        </div>
+
+        <div class="card">
+            <div class="metric">
+                <span class="metric-label">Tiempo de Reacción</span>
+                <span id="reaction-time" class="metric-value reaction">-- ms</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Tiempo Botón 1 Presionado</span>
+                <span id="hold-time" class="metric-value hold">-- ms</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Delay Aleatorio</span>
+                <span id="random-delay" class="metric-value delay">-- ms</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="stats-row">
+                <div class="stat-box">
+                    <div id="stat-min" class="stat-value">--</div>
+                    <div class="stat-label">Mín</div>
+                </div>
+                <div class="stat-box">
+                    <div id="stat-avg" class="stat-value">--</div>
+                    <div class="stat-label">Prom</div>
+                </div>
+                <div class="stat-box">
+                    <div id="stat-max" class="stat-value">--</div>
+                    <div class="stat-label">Máx</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3 class="history-title">Historial (últimos 50)</h3>
+            <div id="history-list" class="history-list">
+                <div class="empty-state">Sin datos aún. Presiona el botón en el dispositivo.</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        const statusEl = document.getElementById('status');
+        const statusText = document.getElementById('status-text');
+        const reactionEl = document.getElementById('reaction-time');
+        const holdEl = document.getElementById('hold-time');
+        const delayEl = document.getElementById('random-delay');
+        const historyEl = document.getElementById('history-list');
+        const statMin = document.getElementById('stat-min');
+        const statAvg = document.getElementById('stat-avg');
+        const statMax = document.getElementById('stat-max');
+
+        let history = [];
+
+        function formatTime(ms) {
+            return ms.toLocaleString() + ' ms';
+        }
+
+        function updateStats() {
+            if (history.length === 0) {
+                statMin.textContent = '--';
+                statAvg.textContent = '--';
+                statMax.textContent = '--';
+                return;
+            }
+            const times = history.map(h => h.reaction_time_ms).sort((a, b) => a - b);
+            const sum = times.reduce((a, b) => a + b, 0);
+            statMin.textContent = formatTime(times[0]);
+            statAvg.textContent = formatTime(Math.round(sum / times.length));
+            statMax.textContent = formatTime(times[times.length - 1]);
+        }
+
+        function renderHistory() {
+            if (history.length === 0) {
+                historyEl.innerHTML = '<div class="empty-state">Sin datos aún. Presiona el botón en el dispositivo.</div>';
+                return;
+            }
+            historyEl.innerHTML = history.map((item, idx) => `
+                <div class="history-item">
+                    <div>
+                        <span class="history-reaction">${formatTime(item.reaction_time_ms)}</span>
+                        <span style="margin-left: 10px; color: #888; font-size: 0.75rem;">
+                            Hold: ${formatTime(item.button1_hold_time_ms)}
+                        </span>
+                    </div>
+                    <span class="history-time">${new Date(item.timestamp).toLocaleTimeString()}</span>
+                </div>
+            `).join('');
+        }
+
+        socket.on('connect', () => {
+            statusEl.className = 'status active';
+            statusText.textContent = 'Conectado - Esperando datos';
+        });
+
+        socket.on('disconnect', () => {
+            statusEl.className = 'status disconnected';
+            statusText.textContent = 'Desconectado';
+        });
+
+        socket.on('initial_data', (data) => {
+            if (data.reaction_time_ms > 0) {
+                reactionEl.textContent = formatTime(data.reaction_time_ms);
+                holdEl.textContent = formatTime(data.button1_hold_time_ms);
+                delayEl.textContent = formatTime(data.random_delay_ms);
+            }
+        });
+
+        socket.on('new_data', (data) => {
+            reactionEl.textContent = formatTime(data.reaction_time_ms);
+            holdEl.textContent = formatTime(data.button1_hold_time_ms);
+            delayEl.textContent = formatTime(data.random_delay_ms);
+            statusEl.className = 'status active';
+            statusText.textContent = '¡Nuevo dato recibido!';
+            setTimeout(() => {
+                statusText.textContent = 'Conectado - Esperando datos';
+            }, 3000);
+        });
+
+        socket.on('history_update', (data) => {
+            history = data;
+            renderHistory();
+            updateStats();
+        });
+
+        // Keep screen awake on mobile
+        if ('wakeLock' in navigator) {
+            navigator.wakeLock.request('screen').catch(() => {});
+        }
+    </script>
+</body>
+</html>

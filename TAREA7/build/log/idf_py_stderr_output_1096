@@ -1,0 +1,2 @@
+Command: cmake -G Ninja -DPYTHON_DEPS_CHECKED=1 -DPYTHON=C:\Users\hanie\.espressif\python_env\idf5.5_py3.11_env\Scripts\python.exe -DESP_PLATFORM=1 -DCCACHE_ENABLE=0 C:\Users\hanie\Desktop\Haniel_Garcia_Micro_2026_C2\TAREA7
+C:\Users\hanie\AppData\Local\Temp\kconfgen_tmps4imfb9d:13: warning: '8388608' is not a valid value for the bool symbol SPI_FLASH_SIZE_OVERRIDE (defined at C:/esp-IDF/v5.5.4/esp-idf/components/spi_flash/Kconfig:355). Assignment ignored.

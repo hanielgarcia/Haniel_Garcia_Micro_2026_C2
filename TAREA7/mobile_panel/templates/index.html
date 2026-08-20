@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>TAREA7 - Reaction Timer</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:linear-gradient(135deg,#0f0c29 0%,#302b63 50%,#24243e 100%);color:#e0e0e0;min-height:100vh;padding:16px}
+        .container{max-width:520px;margin:0 auto}
+        h1{text-align:center;color:#fff;margin-bottom:4px;font-size:1.6rem}
+        .subtitle{text-align:center;color:#aaa;margin-bottom:18px;font-size:.85rem}
+        .card{background:rgba(255,255,255,.06);border-radius:16px;padding:18px;margin-bottom:14px;border:1px solid rgba(255,255,255,.1);backdrop-filter:blur(10px)}
+        .metric{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+        .metric:last-child{border-bottom:none}
+        .metric-label{font-size:.9rem;color:#aaa}
+        .metric-value{font-size:1.35rem;font-weight:700;font-variant-numeric:tabular-nums}
+        .reaction{color:#00d4aa}.release{color:#ff6b6b}.travel{color:#ffa502}.hold{color:#ffd93d}.delay{color:#6c8eff}
+        .status{display:flex;align-items:center;justify-content:center;gap:8px;padding:10px;border-radius:10px;margin-bottom:14px;font-weight:600;font-size:.9rem}
+        .status.idle{background:rgba(255,255,255,.08);color:#aaa}
+        .status.armed{background:rgba(255,217,61,.18);color:#ffd93d}
+        .status.signal{background:rgba(0,212,170,.2);color:#00d4aa;animation:pulse 1s infinite}
+        .status.false{background:rgba(255,71,87,.2);color:#ff4757}
+        .status-dot{width:9px;height:9px;border-radius:50%}
+        .idle .status-dot{background:#aaa}.armed .status-dot{background:#ffd93d}.signal .status-dot{background:#00d4aa;box-shadow:0 0 8px #00d4aa}.false .status-dot{background:#ff4757}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+        .stats-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+        .stat-box{background:rgba(255,255,255,.05);border-radius:10px;padding:12px;text-align:center}
+        .stat-value{font-size:1.2rem;font-weight:700}.stat-label{font-size:.65rem;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-top:3px}
+        .history-title{font-size:.95rem;font-weight:600;margin-bottom:10px;color:#fff;display:flex;justify-content:space-between}
+        .history-list{max-height:320px;overflow-y:auto}
+        .history-item{display:flex;justify-content:space-between;align-items:center;padding:9px 10px;background:rgba(255,255,255,.04);border-radius:8px;margin-bottom:6px;font-size:.82rem}
+        .history-item.false_start{border-left:3px solid #ff4757;opacity:.8}
+        .history-item.timeout{border-left:3px solid #ffa502;opacity:.6}
+        .history-reaction{color:#00d4aa;font-weight:700}
+        .history-release{color:#ff6b6b;font-size:.75rem}
+        .history-time{color:#888;font-size:.7rem}
+        .empty-state{text-align:center;color:#666;padding:30px 10px;font-size:.85rem}
+        .badge{font-size:.65rem;padding:2px 6px;border-radius:6px;font-weight:700}
+        .badge-ok{background:rgba(0,212,170,.2);color:#00d4aa}.badge-false{background:rgba(255,71,87,.2);color:#ff4757}.badge-timeout{background:rgba(255,165,2,.2);color:#ffa502}
+        .btn{width:100%;padding:10px;border:none;border-radius:10px;background:rgba(255,255,255,.08);color:#aaa;font-weight:600;cursor:pointer;margin-top:10px}
+        .btn:active{background:rgba(255,255,255,.15)}
+        .mqtt-status{font-size:.7rem;text-align:center;color:#666;margin-bottom:8px}
+        .flow{font-size:.75rem;color:#888;background:rgba(255,255,255,.04);padding:10px;border-radius:8px;margin-bottom:14px;line-height:1.5}
+        .flow b{color:#ffd93d}
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>⚡ Reaction Timer T7</h1>
+    <p class="subtitle">ESP32-S3 • Precisión 1 ms • MQTT</p>
+    <div class="flow">
+        <b>Flujo:</b> 1) Mantén <b>PB1 (GPIO4)</b> presionado → 2) Espera señal <b>LED+Buzzer</b> (2-6 s aleatorio) → 3) <b>Suelta PB1</b> → 4) <b>Presiona PB2 (GPIO5)</b> en &lt;5 s.
+        Si sueltas antes = <b style="color:#ff4757">FALSE START</b>.
+    </div>
+    <div id="mqtt-info" class="mqtt-status">MQTT: conectando...</div>
+    <div id="status" class="status idle"><span class="status-dot"></span><span id="status-text">Esperando datos...</span></div>
+
+    <div class="card">
+        <div class="metric"><span class="metric-label">Reacción total (señal → PB2)</span><span id="reaction-time" class="metric-value reaction">-- ms</span></div>
+        <div class="metric"><span class="metric-label">Suelta PB1 (señal → suelta)</span><span id="release-time" class="metric-value release">-- ms</span></div>
+        <div class="metric"><span class="metric-label">Traslado (suelta → PB2)</span><span id="travel-time" class="metric-value travel">-- ms</span></div>
+        <div class="metric"><span class="metric-label">Tiempo PB1 presionado</span><span id="hold-time" class="metric-value hold">-- ms</span></div>
+        <div class="metric"><span class="metric-label">Delay aleatorio</span><span id="random-delay" class="metric-value delay">-- ms</span></div>
+        <div style="text-align:center;margin-top:10px;font-size:.7rem;color:#666" id="status-detail"></div>
+    </div>
+
+    <div class="card">
+        <div class="stats-row">
+            <div class="stat-box"><div id="stat-min" class="stat-value">--</div><div class="stat-label">Mín (total)</div></div>
+            <div class="stat-box"><div id="stat-avg" class="stat-value">--</div><div class="stat-label">Prom (total)</div></div>
+            <div class="stat-box"><div id="stat-max" class="stat-value">--</div><div class="stat-label">Máx (total)</div></div>
+        </div>
+        <div class="stats-row" style="margin-top:10px">
+            <div class="stat-box"><div id="stat-count" class="stat-value">0</div><div class="stat-label">Intentos</div></div>
+            <div class="stat-box"><div id="stat-fails" class="stat-value">0</div><div class="stat-label">Falsas</div></div>
+            <div class="stat-box"><div id="stat-best-release" class="stat-value">--</div><div class="stat-label">Mejor suelta</div></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="history-title"><span>Historial (50)</span><span style="font-size:.7rem;color:#666" id="history-count">0</span></div>
+        <div id="history-list" class="history-list"><div class="empty-state">Sin datos aún.<br>Mantén PB1 presionado en el ESP32.</div></div>
+        <button class="btn" onclick="clearHistory()">Limpiar historial</button>
+    </div>
+    <p style="text-align:center;color:#555;font-size:.65rem;margin-top:10px">Broker: test.mosquitto.org • Topic: reaction_timer/data • TAREA7</p>
+</div>
+<script>
+const socket = io();
+const statusEl=document.getElementById('status'), statusText=document.getElementById('status-text'), statusDetail=document.getElementById('status-detail');
+const reactionEl=document.getElementById('reaction-time'), releaseEl=document.getElementById('release-time'), travelEl=document.getElementById('travel-time'), holdEl=document.getElementById('hold-time'), delayEl=document.getElementById('random-delay');
+const historyEl=document.getElementById('history-list'), mqttInfo=document.getElementById('mqtt-info');
+const statMin=document.getElementById('stat-min'), statAvg=document.getElementById('stat-avg'), statMax=document.getElementById('stat-max'), statCount=document.getElementById('stat-count'), statFails=document.getElementById('stat-fails'), statBest=document.getElementById('stat-best-release'), histCount=document.getElementById('history-count');
+let history=[];
+function fmt(ms){return (ms||0).toLocaleString()+' ms'}
+function setStatus(cls,txt,detail){statusEl.className='status '+cls; statusText.textContent=txt; statusDetail.textContent=detail||''}
+function updateStats(){
+    if(history.length===0){statMin.textContent=statAvg.textContent=statMax.textContent=statBest.textContent='--'; statCount.textContent='0'; statFails.textContent='0'; return}
+    const oks=history.filter(h=>h.status==='ok');
+    const fails=history.filter(h=>h.status==='false_start').length;
+    statCount.textContent=history.length; statFails.textContent=fails;
+    if(oks.length===0){statMin.textContent=statAvg.textContent=statMax.textContent='--'; statBest.textContent='--'; return}
+    const totals=oks.map(h=>h.reaction_time_ms).sort((a,b)=>a-b);
+    const releases=oks.map(h=>h.release_time_ms).sort((a,b)=>a-b);
+    const sum=totals.reduce((a,b)=>a+b,0);
+    statMin.textContent=fmt(totals[0]); statAvg.textContent=fmt(Math.round(sum/totals.length)); statMax.textContent=fmt(totals[totals.length-1]);
+    statBest.textContent=fmt(releases[0]);
+    histCount.textContent=history.length;
+}
+function renderHistory(){
+    if(history.length===0){historyEl.innerHTML='<div class="empty-state">Sin datos aún.<br>Mantén PB1 presionado en el ESP32.</div>';return}
+    historyEl.innerHTML=history.map(item=>{
+        let badge='', cls='';
+        if(item.status==='false_start'){badge='<span class="badge badge-false">FALSE</span>'; cls='false_start'}
+        else if(item.status==='timeout'){badge='<span class="badge badge-timeout">TIMEOUT</span>'; cls='timeout'}
+        else badge='<span class="badge badge-ok">OK</span>';
+        return `<div class="history-item ${cls}"><div><div>${badge} <span class="history-reaction">${fmt(item.reaction_time_ms)}</span> <span class="history-release">suelta ${fmt(item.release_time_ms)}</span></div><div style="color:#666;font-size:.7rem">hold ${fmt(item.hold_time_ms)} • delay ${fmt(item.random_delay_ms)} • traslado ${fmt(item.travel_time_ms)}</div></div><span class="history-time">${item.timestamp?new Date(item.timestamp).toLocaleTimeString():''}</span></div>`
+    }).join('');
+}
+function clearHistory(){socket.emit('clear_history');}
+socket.on('connect',()=>{mqttInfo.textContent='Socket conectado';});
+socket.on('disconnect',()=>{mqttInfo.textContent='Socket desconectado'; setStatus('idle','Desconectado','');});
+socket.on('mqtt_status',d=>{mqttInfo.textContent='MQTT Broker: '+d.status;});
+socket.on('esp_status',d=>{
+    if(d.status==='signal_on') setStatus('signal','¡SEÑAL! Suelta PB1 y presiona PB2','Delay '+fmt(d.random_delay_ms));
+});
+socket.on('initial_data',d=>{
+    if(d.reaction_time_ms>0||d.status==='false_start'){ applyData(d) }
+});
+socket.on('new_data',d=>{ applyData(d); history.unshift(normalize(d)); if(history.length>50) history.pop(); renderHistory(); updateStats(); });
+socket.on('history_update',d=>{ history=d.map(normalize); renderHistory(); updateStats(); });
+function normalize(d){ return {status:d.status||'ok',reaction_time_ms:d.reaction_time_ms||0, release_time_ms:d.release_time_ms||0, travel_time_ms:d.travel_time_ms||0, hold_time_ms:d.hold_time_ms||d.button1_hold_time_ms||0, random_delay_ms:d.random_delay_ms||0, timestamp:d.timestamp||Date.now()} }
+function applyData(d){
+    if(d.status==='false_start'){ reactionEl.textContent='FALSE START'; releaseEl.textContent='--'; travelEl.textContent='--'; holdEl.textContent=fmt(d.hold_time_ms||d.button1_hold_time_ms); delayEl.textContent=fmt(d.random_delay_ms); setStatus('false','¡FALSE START! Soltaste antes','Mantén PB1 y espera la señal'); setTimeout(()=>setStatus('idle','Listo',''),3000); return}
+    if(d.status==='timeout'){ setStatus('false','TIMEOUT '+ (d.stage||''),'Intento reiniciado'); return}
+    if(d.status==='ok' || d.reaction_time_ms!==undefined){
+        reactionEl.textContent=fmt(d.reaction_time_ms); releaseEl.textContent=fmt(d.release_time_ms); travelEl.textContent=fmt(d.travel_time_ms); holdEl.textContent=fmt(d.hold_time_ms||d.button1_hold_time_ms); delayEl.textContent=fmt(d.random_delay_ms);
+        setStatus('signal','¡Medición OK!','Total '+fmt(d.reaction_time_ms)+' • Suelta '+fmt(d.release_time_ms)); setTimeout(()=>setStatus('idle','Listo para siguiente','Mantén PB1'),2500);
+    }
+    if(d.status==='signal_on'){ setStatus('signal','¡SEÑAL ACTIVA!','Suelta PB1 AHORA'); }
+}
+if('wakeLock' in navigator){ navigator.wakeLock.request('screen').catch(()=>{}); }
+</script>
+</body>
+</html>

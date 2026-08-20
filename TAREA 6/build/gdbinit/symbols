@@ -1,0 +1,9 @@
+
+
+# Load bootloader symbols
+set confirm off
+    add-symbol-file C:/Users/hanie/Desktop/Haniel_Garcia_Micro_2026_C2/reaction_timer/build/bootloader/bootloader.elf
+set confirm on
+
+# Load application symbols
+file C:/Users/hanie/Desktop/Haniel_Garcia_Micro_2026_C2/reaction_timer/build/reaction_timer.elf

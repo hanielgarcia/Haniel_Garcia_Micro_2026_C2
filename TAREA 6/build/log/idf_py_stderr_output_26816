@@ -1,0 +1,18 @@
+Command: ninja all
+C:\Users\hanie\AppData\Local\Temp\kconfgen_tmp_z8j1d4b:21: warning: '0x800000' is not a valid value for the bool symbol SPI_FLASH_SIZE_OVERRIDE (defined at C:/esp-IDF/v5.5.4/esp-idf/components/spi_flash/Kconfig:355). Assignment ignored.
+info: Choice COMPILER_OPTIMIZATION has multiple active selections. The last one will be used: COMPILER_OPTIMIZATION_DEBUG .
+Traceback (most recent call last):
+  File "C:\esp-IDF\v5.5.4\esp-idf\components\esp_rom\gen_gdbinit.py", line 72, in <module>
+    gdbinit_lines = generate_gdbinit_rom_add_symbols(target)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\esp-IDF\v5.5.4\esp-idf\components\esp_rom\gen_gdbinit.py", line 32, in generate_gdbinit_rom_add_symbols
+    raise EnvironmentError(
+OSError: ESP_ROM_ELF_DIR environment variable is not defined. Please try to run IDF "install" and "export" scripts.
+CMake Warning at C:/esp-IDF/v5.5.4/esp-idf/tools/cmake/gdbinit.cmake:52 (message):
+  Error while generating esp_rom gdbinit
+Call Stack (most recent call first):
+  C:/esp-IDF/v5.5.4/esp-idf/tools/cmake/project.cmake:356 (__generate_gdbinit)
+  C:/esp-IDF/v5.5.4/esp-idf/tools/cmake/project.cmake:979 (__project_info)
+  CMakeLists.txt:6 (project)
+
+

@@ -1,0 +1,24 @@
+{
+    "configurations": [
+        {
+            "name": "ESP32-S3",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "C:/esp-idf/v5.5.4/esp-idf/components/**",
+                "C:/esp-idf/v5.5.4/esp-idf/components/esp32s3/include/**",
+                "C:/Users/hanie/.espressif/tools/xtensa-esp-elf/esp-14.2.0_20260121/xtensa-esp-elf/xtensa-esp32s3-elf/include/**"
+            ],
+            "defines": [
+                "ESP_PLATFORM",
+                "IDF_VER=\"v5.5.4\"",
+                "CONFIG_IDF_TARGET_ESP32S3",
+                "CONFIG_FREERTOS_HZ=1000"
+            ],
+            "compilerPath": "C:/Users/hanie/.espressif/tools/xtensa-esp-elf/esp-14.2.0_20260121/xtensa-esp-elf/bin/xtensa-esp32s3-elf-gcc.exe",
+            "cStandard": "gnu17",
+            "cppStandard": "gnu++17",
+            "intelliSenseMode": "gcc-x64"
+        }
+    ],
+    "version": 4
+}

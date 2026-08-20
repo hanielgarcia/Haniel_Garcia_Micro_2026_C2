@@ -1,0 +1,97 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "ESP-IDF: Build",
+            "type": "shell",
+            "command": "C:\\Users\\hanie\\.espressif\\python_env\\idf5.5_py3.11_env\\Scripts\\python.exe",
+            "args": [
+                "C:\\esp-idf\\v5.5.4\\esp-idf\\tools\\idf.py",
+                "build"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}",
+                "env": {
+                    "IDF_PATH": "C:\\esp-idf\\v5.5.4\\esp-idf",
+                    "PATH": "${env:PATH};C:\\Users\\hanie\\.espressif\\tools\\cmake\\3.30.2\\bin;C:\\Users\\hanie\\.espressif\\tools\\ninja\\1.12.1;C:\\Users\\hanie\\.espressif\\tools\\xtensa-esp-elf\\esp-14.2.0_20260121\\xtensa-esp-elf\\bin"
+                }
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "ESP-IDF: Flash",
+            "type": "shell",
+            "command": "C:\\Users\\hanie\\.espressif\\python_env\\idf5.5_py3.11_env\\Scripts\\python.exe",
+            "args": [
+                "C:\\esp-idf\\v5.5.4\\esp-idf\\tools\\idf.py",
+                "flash"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}",
+                "env": {
+                    "IDF_PATH": "C:\\esp-idf\\v5.5.4\\esp-idf",
+                    "PATH": "${env:PATH};C:\\Users\\hanie\\.espressif\\tools\\cmake\\3.30.2\\bin;C:\\Users\\hanie\\.espressif\\tools\\ninja\\1.12.1;C:\\Users\\hanie\\.espressif\\tools\\xtensa-esp-elf\\esp-14.2.0_20260121\\xtensa-esp-elf\\bin"
+                }
+            },
+            "group": "test"
+        },
+        {
+            "label": "ESP-IDF: Monitor",
+            "type": "shell",
+            "command": "C:\\Users\\hanie\\.espressif\\python_env\\idf5.5_py3.11_env\\Scripts\\python.exe",
+            "args": [
+                "C:\\esp-idf\\v5.5.4\\esp-idf\\tools\\idf.py",
+                "monitor"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}",
+                "env": {
+                    "IDF_PATH": "C:\\esp-idf\\v5.5.4\\esp-idf",
+                    "PATH": "${env:PATH};C:\\Users\\hanie\\.espressif\\tools\\cmake\\3.30.2\\bin;C:\\Users\\hanie\\.espressif\\tools\\ninja\\1.12.1;C:\\Users\\hanie\\.espressif\\tools\\xtensa-esp-elf\\esp-14.2.0_20260121\\xtensa-esp-elf\\bin"
+                }
+            },
+            "group": "test"
+        },
+        {
+            "label": "ESP-IDF: Flash Monitor",
+            "type": "shell",
+            "command": "C:\\Users\\hanie\\.espressif\\python_env\\idf5.5_py3.11_env\\Scripts\\python.exe",
+            "args": [
+                "C:\\esp-idf\\v5.5.4\\esp-idf\\tools\\idf.py",
+                "flash",
+                "monitor"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}",
+                "env": {
+                    "IDF_PATH": "C:\\esp-idf\\v5.5.4\\esp-idf",
+                    "PATH": "${env:PATH};C:\\Users\\hanie\\.espressif\\tools\\cmake\\3.30.2\\bin;C:\\Users\\hanie\\.espressif\\tools\\ninja\\1.12.1;C:\\Users\\hanie\\.espressif\\tools\\xtensa-esp-elf\\esp-14.2.0_20260121\\xtensa-esp-elf\\bin"
+                }
+            },
+            "group": "test"
+        },
+        {
+            "label": "ESP-IDF: Menuconfig",
+            "type": "shell",
+            "command": "C:\\Users\\hanie\\.espressif\\python_env\\idf5.5_py3.11_env\\Scripts\\python.exe",
+            "args": [
+                "C:\\esp-idf\\v5.5.4\\esp-idf\\tools\\idf.py",
+                "menuconfig"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}",
+                "env": {
+                    "IDF_PATH": "C:\\esp-idf\\v5.5.4\\esp-idf",
+                    "PATH": "${env:PATH};C:\\Users\\hanie\\.espressif\\tools\\cmake\\3.30.2\\bin;C:\\Users\\hanie\\.espressif\\tools\\ninja\\1.12.1;C:\\Users\\hanie\\.espressif\\tools\\xtensa-esp-elf\\esp-14.2.0_20260121\\xtensa-esp-elf\\bin"
+                }
+            },
+            "group": "test"
+        }
+    ]
+}

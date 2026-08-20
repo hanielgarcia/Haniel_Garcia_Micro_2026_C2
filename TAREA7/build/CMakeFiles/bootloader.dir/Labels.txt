@@ -1,0 +1,13 @@
+# Target labels
+ bootloader
+# Source files and their labels
+C:/Users/hanie/Desktop/Haniel_Garcia_Micro_2026_C2/TAREA7/build/CMakeFiles/bootloader
+C:/Users/hanie/Desktop/Haniel_Garcia_Micro_2026_C2/TAREA7/build/CMakeFiles/bootloader.rule
+C:/Users/hanie/Desktop/Haniel_Garcia_Micro_2026_C2/TAREA7/build/CMakeFiles/bootloader-complete.rule
+C:/Users/hanie/Desktop/Haniel_Garcia_Micro_2026_C2/TAREA7/build/bootloader-prefix/src/bootloader-stamp/bootloader-build.rule
+C:/Users/hanie/Desktop/Haniel_Garcia_Micro_2026_C2/TAREA7/build/bootloader-prefix/src/bootloader-stamp/bootloader-configure.rule
+C:/Users/hanie/Desktop/Haniel_Garcia_Micro_2026_C2/TAREA7/build/bootloader-prefix/src/bootloader-stamp/bootloader-download.rule
+C:/Users/hanie/Desktop/Haniel_Garcia_Micro_2026_C2/TAREA7/build/bootloader-prefix/src/bootloader-stamp/bootloader-install.rule
+C:/Users/hanie/Desktop/Haniel_Garcia_Micro_2026_C2/TAREA7/build/bootloader-prefix/src/bootloader-stamp/bootloader-mkdir.rule
+C:/Users/hanie/Desktop/Haniel_Garcia_Micro_2026_C2/TAREA7/build/bootloader-prefix/src/bootloader-stamp/bootloader-patch.rule
+C:/Users/hanie/Desktop/Haniel_Garcia_Micro_2026_C2/TAREA7/build/bootloader-prefix/src/bootloader-stamp/bootloader-update.rule
